@@ -3,20 +3,31 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Icon from '@/components/ui/icon';
 
 interface Product {
   id: number;
   name: string;
   category: string;
+  brand: string;
   minPrice: number;
   maxPrice: number;
   suppliers: number;
-  image: string;
+  inStock: boolean;
+  rating: number;
 }
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState([0, 15000]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [minRating, setMinRating] = useState(0);
 
   const categories = [
     { name: 'Цемент', icon: 'Package', count: 234 },
@@ -27,65 +38,262 @@ const Index = () => {
     { name: 'Метизы', icon: 'Hammer', count: 567 },
   ];
 
+  const brands = ['СтройЦемент', 'Makita', 'Боровичи', 'Dulux', 'Fischer', 'Knauf', 'KRASS'];
+
   const products: Product[] = [
     {
       id: 1,
       name: 'Цемент М500 50кг',
       category: 'Цемент',
+      brand: 'СтройЦемент',
       minPrice: 320,
       maxPrice: 450,
       suppliers: 12,
-      image: '/placeholder.svg',
+      inStock: true,
+      rating: 4.5,
     },
     {
       id: 2,
       name: 'Кирпич керамический полнотелый',
       category: 'Кирпич',
+      brand: 'Боровичи',
       minPrice: 18,
       maxPrice: 28,
       suppliers: 8,
-      image: '/placeholder.svg',
+      inStock: true,
+      rating: 4.8,
     },
     {
       id: 3,
       name: 'Доска обрезная 25×150×6000',
       category: 'Доски',
+      brand: 'KRASS',
       minPrice: 850,
       maxPrice: 1200,
       suppliers: 15,
-      image: '/placeholder.svg',
+      inStock: false,
+      rating: 4.2,
     },
     {
       id: 4,
       name: 'Перфоратор Makita HR2470',
       category: 'Инструменты',
+      brand: 'Makita',
       minPrice: 8500,
       maxPrice: 12000,
       suppliers: 6,
-      image: '/placeholder.svg',
+      inStock: true,
+      rating: 4.9,
     },
     {
       id: 5,
       name: 'Краска водоэмульсионная 10л',
       category: 'Краски',
+      brand: 'Dulux',
       minPrice: 1200,
       maxPrice: 1850,
       suppliers: 10,
-      image: '/placeholder.svg',
+      inStock: true,
+      rating: 4.6,
     },
     {
       id: 6,
       name: 'Саморезы 3.5×35мм (1000 шт)',
       category: 'Метизы',
+      brand: 'Fischer',
       minPrice: 180,
       maxPrice: 290,
       suppliers: 14,
-      image: '/placeholder.svg',
+      inStock: true,
+      rating: 4.4,
+    },
+    {
+      id: 7,
+      name: 'Гипсокартон Knauf 2500×1200×12.5',
+      category: 'Доски',
+      brand: 'Knauf',
+      minPrice: 350,
+      maxPrice: 520,
+      suppliers: 9,
+      inStock: true,
+      rating: 4.7,
+    },
+    {
+      id: 8,
+      name: 'Дрель-шуруповерт Makita DF330D',
+      category: 'Инструменты',
+      brand: 'Makita',
+      minPrice: 4500,
+      maxPrice: 6200,
+      suppliers: 7,
+      inStock: false,
+      rating: 4.5,
     },
   ];
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesPrice = product.minPrice >= priceRange[0] && product.minPrice <= priceRange[1];
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+    const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
+    const matchesStock = !inStockOnly || product.inStock;
+    const matchesRating = product.rating >= minRating;
+    
+    return matchesSearch && matchesPrice && matchesCategory && matchesBrand && matchesStock && matchesRating;
+  });
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
+    );
+  };
+
+  const toggleBrand = (brand: string) => {
+    setSelectedBrands(prev =>
+      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    );
+  };
+
+  const resetFilters = () => {
+    setPriceRange([0, 15000]);
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    setInStockOnly(false);
+    setMinRating(0);
+  };
+
+  const FilterPanel = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold text-lg">Фильтры</h4>
+        <Button variant="ghost" size="sm" onClick={resetFilters}>
+          Сбросить
+        </Button>
+      </div>
+
+      <Accordion type="multiple" defaultValue={['price', 'category', 'brand', 'stock']} className="w-full">
+        <AccordionItem value="price">
+          <AccordionTrigger className="text-base font-semibold">
+            Цена
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 pt-2">
+              <Slider
+                value={priceRange}
+                onValueChange={setPriceRange}
+                max={15000}
+                step={100}
+                className="w-full"
+              />
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{priceRange[0]} ₽</span>
+                <span className="font-medium">{priceRange[1]} ₽</span>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="category">
+          <AccordionTrigger className="text-base font-semibold">
+            Категория
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3 pt-2">
+              {categories.map(category => (
+                <div key={category.name} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={category.name}
+                    checked={selectedCategories.includes(category.name)}
+                    onCheckedChange={() => toggleCategory(category.name)}
+                  />
+                  <label
+                    htmlFor={category.name}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                  >
+                    {category.name}
+                    <span className="text-muted-foreground ml-1">({category.count})</span>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="brand">
+          <AccordionTrigger className="text-base font-semibold">
+            Бренд
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3 pt-2">
+              {brands.map(brand => (
+                <div key={brand} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={brand}
+                    checked={selectedBrands.includes(brand)}
+                    onCheckedChange={() => toggleBrand(brand)}
+                  />
+                  <label
+                    htmlFor={brand}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {brand}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="stock">
+          <AccordionTrigger className="text-base font-semibold">
+            Наличие
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="inStock"
+                  checked={inStockOnly}
+                  onCheckedChange={(checked) => setInStockOnly(checked as boolean)}
+                />
+                <label
+                  htmlFor="inStock"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Только в наличии
+                </label>
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="rating">
+          <AccordionTrigger className="text-base font-semibold">
+            Рейтинг
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3 pt-2">
+              {[4.5, 4.0, 3.5, 3.0].map(rating => (
+                <div key={rating} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`rating-${rating}`}
+                    checked={minRating === rating}
+                    onCheckedChange={() => setMinRating(minRating === rating ? 0 : rating)}
+                  />
+                  <label
+                    htmlFor={`rating-${rating}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center"
+                  >
+                    <Icon name="Star" size={16} className="text-yellow-500 fill-yellow-500 mr-1" />
+                    От {rating}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
   );
 
   return (
@@ -162,9 +370,12 @@ const Index = () => {
                 key={category.name}
                 className="hover:shadow-lg transition-all cursor-pointer hover:scale-105 animate-scale-in"
                 style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => toggleCategory(category.name)}
               >
                 <CardContent className="pt-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className={`w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-3 ${
+                    selectedCategories.includes(category.name) ? 'ring-4 ring-primary/30' : ''
+                  }`}>
                     <Icon name={category.icon as any} size={32} className="text-white" />
                   </div>
                   <h4 className="font-semibold mb-1">{category.name}</h4>
@@ -180,49 +391,87 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-3xl font-bold">Актуальные предложения</h3>
-            <Button variant="outline">
-              <Icon name="SlidersHorizontal" size={18} className="mr-2" />
-              Фильтры
-            </Button>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product, index) => (
-              <Card
-                key={product.id}
-                className="hover:shadow-xl transition-all cursor-pointer group animate-fade-in"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <CardHeader className="pb-3">
-                  <div className="aspect-video bg-gradient-to-br from-orange-100 to-blue-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
-                    <Icon name="Package" size={48} className="text-primary/30 group-hover:scale-110 transition-transform" />
+            <div className="flex gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="md:hidden">
+                    <Icon name="SlidersHorizontal" size={18} className="mr-2" />
+                    Фильтры
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Фильтры</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <FilterPanel />
                   </div>
-                  <Badge className="w-fit mb-2">{product.category}</Badge>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-primary">
-                        {product.minPrice}₽
-                      </span>
-                      <span className="text-sm text-muted-foreground line-through">
-                        {product.maxPrice}₽
-                      </span>
+                </SheetContent>
+              </Sheet>
+              <Badge variant="secondary" className="px-3 py-2">
+                Найдено: {filteredProducts.length}
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="grid lg:grid-cols-4 gap-6">
+            <div className="hidden md:block lg:col-span-1">
+              <Card className="sticky top-24">
+                <CardContent className="pt-6">
+                  <FilterPanel />
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-3 grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProducts.map((product, index) => (
+                <Card
+                  key={product.id}
+                  className="hover:shadow-xl transition-all cursor-pointer group animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="aspect-video bg-gradient-to-br from-orange-100 to-blue-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
+                      <Icon name="Package" size={48} className="text-primary/30 group-hover:scale-110 transition-transform" />
+                      {!product.inStock && (
+                        <Badge variant="destructive" className="absolute top-2 right-2">
+                          Нет в наличии
+                        </Badge>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Icon name="Store" size={16} />
-                      <span>{product.suppliers} поставщиков</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge className="w-fit">{product.category}</Badge>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Icon name="Star" size={14} className="text-yellow-500 fill-yellow-500" />
+                        <span className="font-medium">{product.rating}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button className="flex-1">
+                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{product.brand}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl font-bold text-primary">
+                          {product.minPrice}₽
+                        </span>
+                        <span className="text-sm text-muted-foreground line-through">
+                          {product.maxPrice}₽
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Icon name="Store" size={16} />
+                        <span>{product.suppliers} поставщиков</span>
+                      </div>
+                      <Button className="w-full">
                         <Icon name="BarChart3" size={18} className="mr-2" />
                         Сравнить цены
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </section>
