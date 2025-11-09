@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ interface Product {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState([0, 15000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -311,7 +313,7 @@ const Index = () => {
               <a href="#" className="text-foreground hover:text-primary transition-colors">Услуги</a>
               <a href="#" className="text-foreground hover:text-primary transition-colors">Контакты</a>
             </nav>
-            <Button variant="outline" className="hidden md:flex">
+            <Button variant="outline" className="hidden md:flex" onClick={() => navigate('/auth')}>
               <Icon name="User" size={18} className="mr-2" />
               Войти
             </Button>
@@ -483,7 +485,7 @@ const Index = () => {
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
             Присоединяйтесь к тысячам строителей, которые уже экономят на материалах
           </p>
-          <Button size="lg" variant="secondary" className="h-14 px-8">
+          <Button size="lg" variant="secondary" className="h-14 px-8" onClick={() => navigate('/auth')}>
             <Icon name="Rocket" size={20} className="mr-2" />
             Зарегистрироваться бесплатно
           </Button>
